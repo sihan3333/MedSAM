@@ -1,4 +1,5 @@
 *.pyc
+.worktrees/
 # Project specific
 *.DS_Store
 *.pth
