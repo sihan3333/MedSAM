@@ -1,5 +1,6 @@
 *.pyc
 .worktrees/
+platform/data/
 # Project specific
 *.DS_Store
 *.pth
