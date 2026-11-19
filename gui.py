@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import argparse
+import os
 import sys
 import time
 from PyQt5.QtGui import (
@@ -127,8 +129,9 @@ colors = [
 
 
 class Window(QWidget):
-    def __init__(self):
+    def __init__(self, image_path):
         super().__init__()
+        self.setWindowTitle("MedSAM")
 
         # configs
         self.half_point_size = 5  # radius of bbox starting and ending points
@@ -149,7 +152,8 @@ class Window(QWidget):
         self.view = QGraphicsView()
         self.view.setRenderHint(QPainter.Antialiasing)
 
-        pixmap = self.load_image()
+        self.load_image(image_path)
+        self.resize(900, 700)
 
         vbox = QVBoxLayout(self)
         vbox.addWidget(self.view)
@@ -157,7 +161,7 @@ class Window(QWidget):
         load_button = QPushButton("Load Image")
         save_button = QPushButton("Save Mask")
 
-        hbox = QHBoxLayout(self)
+        hbox = QHBoxLayout()
         hbox.addWidget(load_button)
         hbox.addWidget(save_button)
 
@@ -172,7 +176,7 @@ class Window(QWidget):
         self.undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
         self.undo_shortcut.activated.connect(self.undo)
 
-        load_button.clicked.connect(self.load_image)
+        load_button.clicked.connect(self.choose_image)
         save_button.clicked.connect(self.save_mask)
 
     def undo(self):
@@ -192,14 +196,19 @@ class Window(QWidget):
         self.mask_c = self.prev_mask
         self.prev_mask = None
 
-    def load_image(self):
-        file_path, file_type = QFileDialog.getOpenFileName(
+    def choose_image(self):
+        file_path, _file_type = QFileDialog.getOpenFileName(
             self, "Choose Image to Segment", ".", "Image Files (*.png *.jpg *.bmp)"
         )
-
         if file_path is None or len(file_path) == 0:
             print("No image path specified, plz select an image")
-            exit()
+            return
+        self.load_image(file_path)
+
+    def load_image(self, file_path):
+        if not file_path or not os.path.isfile(file_path):
+            print("No image path specified, plz select an image")
+            return
 
         img_np = io.imread(file_path)
         if len(img_np.shape) == 2:
@@ -322,9 +331,20 @@ class Window(QWidget):
         print("Done.")
 
 
-app = QApplication(sys.argv)
+def main():
+    parser = argparse.ArgumentParser(description="MedSAM box-prompt GUI")
+    parser.add_argument(
+        "-i",
+        "--image",
+        default="assets/img_demo.png",
+        help="image to open. Defaults to the demo CT.",
+    )
+    args, _unknown = parser.parse_known_args()
+    app = QApplication(sys.argv)
+    window = Window(args.image)
+    window.show()
+    app.exec()
 
-w = Window()
-w.show()
 
-app.exec()
+if __name__ == "__main__":
+    main()
