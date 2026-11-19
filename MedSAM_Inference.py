@@ -7,9 +7,16 @@ python MedSAM_Inference.py -i assets/img_demo.png -o ./ --box "[95,255,190,350]"
 """
 
 # %% load environment
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+# Save the figure to a file. The Qt window backend aborts on machines
+# that do not have a working display plugin.
+os.environ["MPLBACKEND"] = "Agg"
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
 
 join = os.path.join
 import torch
@@ -151,4 +158,7 @@ ax[1].imshow(img_3c)
 show_mask(medsam_seg, ax[1])
 show_box(box_np[0], ax[1])
 ax[1].set_title("MedSAM Segmentation")
-plt.show()
+vis_path = join(args.seg_path, "vis_" + os.path.basename(args.data_path))
+fig.tight_layout()
+fig.savefig(vis_path, dpi=120)
+print("Saved figure to", vis_path)
